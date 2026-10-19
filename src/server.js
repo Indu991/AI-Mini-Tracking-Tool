@@ -17,6 +17,22 @@ const OLLAMA_URL =
     process.env.OLLAMA_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen3:8b";
 
+
+app.use((req, res, next) => {
+    const startTime = Date.now();
+
+    res.on("finish", () => {
+        logger.info("HTTP request completed", {
+            method: req.method,
+            path: req.path,
+            status: res.statusCode,
+            durationMs: Date.now() - startTime,
+        });
+    });
+
+    next();
+});
+
 app.use(express.json({ limit: "100kb" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/issues", authenticateToken, issueRoutes);
