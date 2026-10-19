@@ -248,6 +248,30 @@ describe("AI Mini Tracking Tool API", () => {
     });
 
 
+    test("Issue list rejects an invalid JWT", async () => {
+        const response = await api
+            .get("/api/issues")
+            .set("Authorization", "Bearer invalid-token");
+
+        expect(response.status).toBe(401);
+        expect(response.body.success).toBe(false);
+    });
+
+
+    test("AI analysis rejects an invalid issue ID", async () => {
+        const token = await login(developer);
+
+        const response = await api
+            .post("/api/issues/not-a-number/ai-summary")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.status).toBe(400);
+        expect(response.body.success).toBe(false);
+        expect(response.body.message).toBe(
+            "Issue ID must be a positive integer"
+        );
+    });
+
     test("Developer cannot generate an AI summary for an Admin-owned issue", async () => {
         const developerToken = await login(developer);
         const adminToken = await login(admin);
