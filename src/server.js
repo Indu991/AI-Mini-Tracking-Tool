@@ -7,8 +7,10 @@ import issueRoutes from "./routes/issueRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import { authenticateToken } from "./middleware/authMiddleware.js";
 import logger from "./utils/logger.js";
+import { validateEnv } from "./config/validateEnv.js";
 
 dotenv.config();
+validateEnv();
 
 const app = express();
 
