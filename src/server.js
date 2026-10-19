@@ -6,6 +6,7 @@ import "./models/Issue.js";
 import issueRoutes from "./routes/issueRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import { authenticateToken } from "./middleware/authMiddleware.js";
+import logger from "./utils/logger.js";
 
 dotenv.config();
 
@@ -78,7 +79,10 @@ ${issueDescription}
         });
 
         if (!response.ok) {
-            console.error("Ollama returned HTTP status:", response.status);
+            // console.error("Ollama returned HTTP status:", response.status);
+            logger.error("Ollama returned an unsuccessful HTTP status", {
+                status: response.status,
+            });
 
             return res.status(502).json({
                 success: false,
@@ -120,7 +124,10 @@ ${issueDescription}
         //     clearTimeout(timeout);
         //   }
     } catch (error) {
-        console.error("AI request failed:", error.message);
+        // console.error("AI request failed:", error.message);
+        logger.error("AI request failed", {
+            error: error.message,
+        });
 
         if (error.name === "AbortError") {
             return res.status(504).json({
@@ -139,21 +146,53 @@ ${issueDescription}
 });
 
 // Handle invalid JSON and other Express errors
+// app.use((err, req, res, next) => {
+//     if (err instanceof SyntaxError && "body" in err) {
+//         return res.status(400).json({
+//             success: false,
+//             message: "Invalid JSON request body",
+//         });
+//     }
+
+//     console.error("Server error:", err.message);
+
+//     return res.status(500).json({
+//         success: false,
+//         message: "Internal server error",
+//     });
+// });
+
+
+ // Handle invalid JSON and other Express errors
 app.use((err, req, res, next) => {
+    if (res.headersSent) {
+        return next(err);
+    }
+
     if (err instanceof SyntaxError && "body" in err) {
+        logger.warn("Invalid JSON request body", {
+            method: req.method,
+            path: req.originalUrl,
+        });
+
         return res.status(400).json({
             success: false,
             message: "Invalid JSON request body",
         });
     }
 
-    console.error("Server error:", err.message);
+    logger.error("Unhandled server error", {
+        method: req.method,
+        path: req.originalUrl,
+        error: err.message,
+    });
 
     return res.status(500).json({
         success: false,
         message: "Internal server error",
     });
 });
+
 
 // Listen only on this computer for local development
 // app.listen(PORT, "127.0.0.1", () => {
@@ -164,22 +203,30 @@ app.use((err, req, res, next) => {
 async function startServer() {
     try {
         await sequelize.authenticate();
-        console.log("PostgreSQL connection successful");
+        // console.log("PostgreSQL connection successful");
+        logger.info("PostgreSQL connection successful");
 
         // Creates the issues table if it does not exist.
         // Suitable for this learning project; use migrations
         // rather than sync for production schema changes.
         await sequelize.sync();
 
-        console.log("Database tables are ready");
+        // console.log("Database tables are ready");
+        logger.info("Database tables are ready");
 
         app.listen(PORT, "127.0.0.1", () => {
-            console.log(
-                `Backend running at http://127.0.0.1:${PORT}`
-            );
+            // console.log(
+            //     `Backend running at http://127.0.0.1:${PORT}`
+            // );
+            logger.info("Backend server started", {
+                url: `http://127.0.0.1:${PORT}`,
+            });
         });
     } catch (error) {
-        console.error("Failed to start the application:", error.message);
+        // console.error("Failed to start the application:", error.message);
+        logger.error("Failed to start the application", {
+            error: error.message,
+        });
         process.exitCode = 1;
     }
 }

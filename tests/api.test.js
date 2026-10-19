@@ -248,6 +248,19 @@ describe("AI Mini Tracking Tool API", () => {
     });
 
 
+    test("Invalid JSON returns a clear 400 error", async () => {
+        const response = await api
+            .post("/api/auth/login")
+            .set("Content-Type", "application/json")
+            .send('{"email":');
+
+        expect(response.status).toBe(400);
+        expect(response.body.success).toBe(false);
+        expect(response.body.message).toBe(
+            "Invalid JSON request body"
+        );
+    });
+
     test("Issue list rejects an invalid JWT", async () => {
         const response = await api
             .get("/api/issues")
