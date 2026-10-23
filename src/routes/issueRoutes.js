@@ -1,6 +1,7 @@
 import { Router } from "express";
 import Issue from "../models/Issue.js";
 import { requireRole } from "../middleware/authMiddleware.js";
+import { issueAiSummaryRateLimiter } from "../middleware/rateLimitMiddleware.js";
 
 const router = Router();
 
@@ -258,7 +259,7 @@ router.delete("/:id", requireRole("Admin"), async (req, res) => {
 
 
 // AI summary for an issue saved in PostgreSQL
-router.post("/:id/ai-summary", async (req, res) => {
+router.post("/:id/ai-summary", issueAiSummaryRateLimiter, async (req, res) => {
     try {
         const id = Number(req.params.id);
 

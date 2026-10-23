@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import { authenticateToken } from "./middleware/authMiddleware.js";
 import logger from "./utils/logger.js";
 import { validateEnv } from "./config/validateEnv.js";
+import { aiSummarizeRateLimiter } from "./middleware/rateLimitMiddleware.js";
 
 dotenv.config();
 validateEnv();
@@ -49,7 +50,7 @@ app.get("/api/health", (req, res) => {
 
 // 2. AI issue-summary API
 // app.post("/api/ai/summarize", async (req, res) => {
-app.post("/api/ai/summarize", authenticateToken, async (req, res) => {
+app.post("/api/ai/summarize", authenticateToken, aiSummarizeRateLimiter, async (req, res) => {
     const { issueDescription } = req.body ?? {};
 
     if (

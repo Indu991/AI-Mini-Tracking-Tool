@@ -2,6 +2,10 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import {
+    loginRateLimiter,
+    registerRateLimiter,
+} from "../middleware/rateLimitMiddleware.js";
 
 const router = Router();
 
@@ -25,7 +29,7 @@ function createToken(user) {
 }
 
 // POST /api/auth/register
-router.post("/register", async (req, res) => {
+router.post("/register", registerRateLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body ?? {};
 
@@ -98,7 +102,7 @@ router.post("/register", async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post("/login", async (req, res) => {
+router.post("/login", loginRateLimiter, async (req, res) => {
   try {
     const { email, password } = req.body ?? {};
 
